@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ilmiva security check</title>
+<style>
+  html, body { margin: 0; background: transparent; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 70px; }
+</style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=ilmivaLoad&render=explicit" async defer></script>
+</head>
+<body>
+<div id="check"></div>
+<script>
+  // Public site key from Cloudflare -> Turnstile. (The SECRET key goes only
+  // into Supabase -> Authentication -> Attack Protection. Never here.)
+  var SITE_KEY = 'REPLACE_WITH_TURNSTILE_SITE_KEY';
+
+  // Admin panel origins allowed to embed this page in an iframe.
+  var ADMIN_ORIGINS = ['http://localhost:5173'];
+
+  function send(msg) {
+    // Flutter app: JavaScript channel named IlmivaCaptcha
+    if (window.IlmivaCaptcha && window.IlmivaCaptcha.postMessage) {
+      window.IlmivaCaptcha.postMessage(msg);
+      return;
+    }
+    // Admin panel: this page inside an iframe
+    if (window.parent && window.parent !== window) {
+      ADMIN_ORIGINS.forEach(function (o) { window.parent.postMessage(msg, o); });
+    }
+  }
+
+  function ilmivaLoad() {
+    turnstile.render('#check', {
+      sitekey: SITE_KEY,
+      action: 'login',
+      appearance: 'interaction-only',
+      theme: 'light',
+      callback: function (token) { send('token:' + token); },
+      'expired-callback': function () { send('expired'); },
+      'timeout-callback': function () { send('timeout'); },
+      'before-interactive-callback': function () { send('interactive'); },
+      'error-callback': function (code) { send('error:' + code); return true; }
+    });
+  }
+</script>
+</body>
+</html>

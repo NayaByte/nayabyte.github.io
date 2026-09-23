@@ -37,7 +37,7 @@
     turnstile.render('#check', {
       sitekey: SITE_KEY,
       action: 'login',
-      appearance: 'interaction-only',
+      appearance: 'always',
       theme: 'light',
       callback: function (token) { send('token:' + token); },
       'expired-callback': function () { send('expired'); },
